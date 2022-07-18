@@ -1,32 +1,46 @@
 # coding:utf-8
 from PyQt5.QtCore import QCoreApplication, QEvent, Qt
 from PyQt5.QtGui import QMouseEvent
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget , QDesktopWidget ,QMainWindow
 
 from ..titlebar import TitleBar
 from ..utils.linux_utils import LinuxMoveResize
-from .window_effect import LinuxWindowEffect
+from .window_effect import UnixWindowEffect
 
 
-class LinuxFramelessWindow(QWidget):
-    """ Frameless window for Linux system """
+class UnixFramelessWindow(QMainWindow):
+    """ Frameless window for Unix system """
 
     BORDER_WIDTH = 5
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
-        self.windowEffect = LinuxWindowEffect(self)
+        self.windowEffect = UnixWindowEffect()
         self.titleBar = TitleBar(self)
-
+        self.__BackgroundImage = QPixmap()
+        self.__İmgPath = str
         self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
         QCoreApplication.instance().installEventFilter(self)
 
         self.titleBar.raise_()
         self.resize(500, 500)
+    def center(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
 
+    def setPicture(self, a0):
+        self.__BackgroundImage.load(a0)
+        self.__İmgPath = a0
     def resizeEvent(self, e):
         super().resizeEvent(e)
         self.titleBar.resize(self.width(), self.titleBar.height())
+
+    def paintEvent(self, event):
+        QMainWindow.paintEvent(self, event)
+        painter = QtGui.QPainter(self)
+        painter.drawPixmap(self.rect(), QPixmap(self.__BackgroundImage))
 
     def setTitleBar(self, titleBar):
         """ set custom title bar
@@ -74,3 +88,4 @@ class LinuxFramelessWindow(QWidget):
             LinuxMoveResize.starSystemResize(self, event.globalPos(), edges)
 
         return super().eventFilter(obj, event)
+
